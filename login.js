@@ -1,29 +1,32 @@
-async function login() {
-  const user = document.getElementById("username").value;
-  const pass = document.getElementById("password").value;
-  const error = document.getElementById("error");
-
-  error.innerText = "";
-
-  if (!user || !pass) {
-    error.innerText = "Please enter username and password";
-    return;
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).end();
   }
 
-  // THIS WILL BE YOUR n8n OR GOOGLE SCRIPT ENDPOINT
-  const endpoint = "https://YOUR-N8N-WEBHOOK-URL";
+  const { email, password } = req.body;
 
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user, pass })
-  });
+  const SHEET_ID = '1R4vLcXshDeMUqDZHO1GUR16AYSSoak1zso0kBdw591w';
+  const SHEET_NAME = 'Users';
 
-  const data = await res.json();
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+  const response = await fetch(url);
+  const text = await response.text();
 
-  if (data.success) {
-    window.location.href = data.redirect;
-  } else {
-    error.innerText = "Invalid login details";
+  const json = JSON.parse(text.substring(47).slice(0, -2));
+  const rows = json.table.rows;
+
+  const user = rows.find(r =>
+    r.c[0]?.v === email &&
+    r.c[1]?.v === password &&
+    r.c[3]?.v === 'active'
+  );
+
+  if (!user) {
+    return res.status(401).json({ 
+      error: 'Email or Password is not valid.\nFor changing password or email contact admin@azadai.com.au' 
+    });
   }
+
+  const redirectUrl = user.c[2].v;
+  res.status(200).json({ redirect: redirectUrl });
 }
