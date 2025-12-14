@@ -2,7 +2,7 @@ const loginForm = document.getElementById('loginForm');
 const errorMessage = document.getElementById('errorMessage');
 
 // Replace this with your Google Sheet API endpoint or function
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwiSnAIgEhgNRZxDmgcwv42iYHzDzMnubuKSwEwhGezuqZqgceCsq83FGiW3ko8WnnPug/exec';
+const SHEET_URL = '1R4vLcXshDeMUqDZHO1GUR16AYSSoak1zso0kBdw591w';
 
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -25,4 +25,5 @@ loginForm.addEventListener('submit', async (e) => {
     errorMessage.innerHTML = 'Server error. Please try again later.';
   }
 });
+
 
