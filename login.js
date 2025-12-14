@@ -1,32 +1,27 @@
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).end();
+const loginForm = document.getElementById('loginForm');
+const errorMessage = document.getElementById('errorMessage');
+
+// Replace this with your Google Sheet API endpoint or function
+const SHEET_URL = 'https://script.google.com/macros/s/1R4vLcXshDeMUqDZHO1GUR16AYSSoak1zso0kBdw591w/exec';
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+
+  try {
+    const response = await fetch(`${SHEET_URL}?action=checkLogin&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
+    const result = await response.json();
+
+    if (result.success) {
+      // Redirect to URL from Google Sheet column C
+      window.location.href = result.redirectUrl;
+    } else {
+      errorMessage.innerHTML = `Email or Password is not valid.<br>For changing password or email contact <a href="mailto:admin@azadai.com.au">admin@azadai.com.au</a>`;
+    }
+  } catch (err) {
+    console.error(err);
+    errorMessage.innerHTML = 'Server error. Please try again later.';
   }
-
-  const { email, password } = req.body;
-
-  const SHEET_ID = '1R4vLcXshDeMUqDZHO1GUR16AYSSoak1zso0kBdw591w';
-  const SHEET_NAME = 'Users';
-
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-  const response = await fetch(url);
-  const text = await response.text();
-
-  const json = JSON.parse(text.substring(47).slice(0, -2));
-  const rows = json.table.rows;
-
-  const user = rows.find(r =>
-    r.c[0]?.v === email &&
-    r.c[1]?.v === password &&
-    r.c[3]?.v === 'active'
-  );
-
-  if (!user) {
-    return res.status(401).json({ 
-      error: 'Email or Password is not valid.\nFor changing password or email contact admin@azadai.com.au' 
-    });
-  }
-
-  const redirectUrl = user.c[2].v;
-  res.status(200).json({ redirect: redirectUrl });
-}
+});
